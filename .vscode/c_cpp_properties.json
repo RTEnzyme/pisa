@@ -8,7 +8,8 @@
                 "${workspaceFolder}/external/boost-cmake/boost/boost_1_67_0",
                 "${workspaceFolder}/external/fmt/include",
                 "${workspaceFolder}/external/mio/include",
-                "${workspaceFolder}/external/tbb/include"
+                "${workspaceFolder}/external/tbb/include",
+                "${workspaceFolder}/external/warcpp/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
