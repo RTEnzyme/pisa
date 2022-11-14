@@ -26,6 +26,7 @@ auto Forward_Index_Builder::batch_file(std::string const& output_file, std::ptrd
     return os.str();
 }
 
+// processing the single batch
 void Forward_Index_Builder::run(
     Batch_Process bp, TermTransformer process_term, process_content_function_type process_content) const
 {
@@ -34,11 +35,16 @@ void Forward_Index_Builder::run(
         bp.batch_number,
         bp.first_document,
         bp.first_document + bp.records.size());
+    // 通过file来记录一个batch的结果，很符合mapreduce的模型
     auto basename = batch_file(bp.output_file, bp.batch_number);
 
+    // forward index in binary format
     std::ofstream os(basename);
+    // a new-line-delimited list of document titles
     std::ofstream title_os(basename + ".documents");
+    // a new-line-delimited list of URLs
     std::ofstream url_os(basename + ".urls");
+    // a new-line-delimited list of sorted terms
     std::ofstream term_os(basename + ".terms");
     write_header(os, bp.records.size());
 
@@ -50,8 +56,8 @@ void Forward_Index_Builder::run(
 
         std::vector<uint32_t> term_ids;
 
-        auto process = [&](auto&& term) {
-            term = process_term(std::move(term));
+        auto process = [&](auto&& term) { // [&]表示捕获外部作用于中所有变量，并作为引用在函数体中使用
+            term = process_term(std::move(term)); // std::move 类似rust中的所有权转移
             uint32_t id = 0;
             if (auto pos = map.find(term); pos != map.end()) {
                 id = pos->second;
@@ -84,6 +90,7 @@ auto Forward_Index_Builder::reverse_mapping(std::vector<std::string>&& terms)
     return mapping;
 }
 
+/// Collects all unique terms from batches into a vector.
 auto Forward_Index_Builder::collect_terms(std::string const& basename, std::ptrdiff_t batch_count)
     -> std::vector<std::string>
 {
@@ -123,6 +130,7 @@ auto Forward_Index_Builder::collect_terms(std::string const& basename, std::ptrd
         std::sort(std::next(terms.begin(), mid), terms.end());
         push_span(Term_Span{mid, terms.size(), 0U});
     }
+    // what is the lvl means? Why does it will be merged only if the lhs.lvl==rhs.lvl?
     while (spans.size() > 1) {
         auto rhs = spans.top();
         spans.pop();
