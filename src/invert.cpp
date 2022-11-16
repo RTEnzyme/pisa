@@ -13,7 +13,7 @@
 #include "pisa/payload_vector.hpp"
 #include "pisa/util/inverted_index_utils.hpp"
 
-template <typename T>
+template <typename T> // flatten
 std::vector<T> concatenate(std::vector<std::vector<T>> const& containers)
 {
     auto full_size = std::accumulate(
@@ -41,7 +41,7 @@ std::istream& read_sequence(std::istream& is, std::vector<T>& out)
 }
 
 namespace pisa { namespace invert {
-
+    /// map a forward index to a vector of posting
     auto map_to_postings(ForwardIndexSlice batch) -> std::vector<Posting>
     {
         auto docid = batch.document_ids.begin();
@@ -71,6 +71,11 @@ namespace pisa { namespace invert {
         }
     }
 
+    /// @brief create an in-memory inverted index for a single document range
+    /// @param documents 
+    /// @param first_document_id 
+    /// @param threads 
+    /// @return 
     auto invert_range(DocumentRange documents, Document_Id first_document_id, size_t threads)
         -> Inverted_Index
     {
@@ -117,10 +122,10 @@ namespace pisa { namespace invert {
     void
     write(std::string const& basename, invert::Inverted_Index const& index, std::uint32_t term_count)
     {
-        std::ofstream dstream(basename + ".docs");
-        std::ofstream fstream(basename + ".freqs");
-        std::ofstream sstream(basename + ".sizes");
-        std::uint32_t count = index.document_sizes.size();
+        std::ofstream dstream(basename + ".docs"); // posting file
+        std::ofstream fstream(basename + ".freqs"); // frequency file
+        std::ofstream sstream(basename + ".sizes"); // posting size file
+        std::uint32_t count = index.document_sizes.size(); // the count of terms
         write_sequence(dstream, gsl::make_span<uint32_t const>(&count, 1));
         for (auto term: ranges::views::iota(Term_Id(0), Term_Id(term_count))) {
             if (auto pos = index.documents.find(term); pos != index.documents.end()) {
@@ -237,6 +242,10 @@ namespace pisa { namespace invert {
         spdlog::info("Number of postings: {}", postings_count);
     }
 
+    /// @brief entry point
+    /// @param input_basename 
+    /// @param output_basename 
+    /// @param params 
     void invert_forward_index(
         std::string const& input_basename, std::string const& output_basename, InvertParams params)
     {
@@ -245,10 +254,10 @@ namespace pisa { namespace invert {
             auto terms = Payload_Vector<>::from(source);
             params.term_count = static_cast<std::uint32_t>(terms.size());
         }
-
+        // build batch and execute
         uint32_t batch_count = invert::build_batches(input_basename, output_basename, params);
         invert::merge_batches(output_basename, batch_count, *params.term_count);
-
+        // remove the temp batch files
         for (auto batch: ranges::views::iota(uint32_t(0), batch_count)) {
             std::ostringstream batch_name_stream;
             batch_name_stream << output_basename << ".batch." << batch;
