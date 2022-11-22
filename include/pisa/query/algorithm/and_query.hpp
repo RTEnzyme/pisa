@@ -45,7 +45,7 @@ struct and_query {
                     break;
                 }
             }
-
+            
             if (i == ordered_cursors.size()) {
                 results.push_back(candidate);
 
