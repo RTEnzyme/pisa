@@ -137,7 +137,7 @@ void perftest(
     for (auto const& q: queries) {
         for (auto t: q.terms) {
             if (!warmed_up.count(t)) {
-                index.warmup(t);
+                index.warmup(t); // bring data to memory cache
                 warmed_up.insert(t);
             }
         }
@@ -358,7 +358,9 @@ int main(int argc, const char** argv)
         /**/
         BOOST_PP_SEQ_FOR_EACH(LOOP_BODY, _, PISA_INDEX_TYPES);
 #undef LOOP_BODY
+    // all stored in persistent memory
 
+    // hybrid PM and DRAM
     } else {
         spdlog::error("Unknown type {}", app.index_encoding());
     }

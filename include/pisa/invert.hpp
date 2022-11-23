@@ -31,7 +31,7 @@ namespace pisa { namespace invert {
         std::vector<std::uint32_t> document_sizes{};
 
         Inverted_Index() = default;
-        Inverted_Index(Inverted_Index&, tbb::split);
+        Inverted_Index(Inverted_Index&, tbb::split); // 参数占位符
         Inverted_Index(
             Documents documents,
             Frequencies frequencies,
