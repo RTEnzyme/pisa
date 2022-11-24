@@ -70,3 +70,6 @@
 [submodule "external/taily"]
 	path = external/taily
 	url = https://github.com/pisa-engine/taily.git
+[submodule "external/memkind"]
+	path = external/memkind
+	url = https://github.com/memkind/memkind.git
