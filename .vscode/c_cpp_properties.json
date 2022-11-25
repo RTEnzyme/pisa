@@ -9,7 +9,8 @@
                 "${workspaceFolder}/external/fmt/include",
                 "${workspaceFolder}/external/mio/include",
                 "${workspaceFolder}/external/tbb/include",
-                "${workspaceFolder}/external/warcpp/include"
+                "${workspaceFolder}/external/warcpp/include",
+                "${workspaceFolder}/external/memkind/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

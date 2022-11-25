@@ -62,6 +62,7 @@ set_property(TARGET gumbo::gumbo APPEND PROPERTY IMPORTED_LOCATION
     ${CMAKE_BINARY_DIR}/gumbo-parser/lib/libgumbo.a)
 add_dependencies( gumbo::gumbo gumbo-external )
 
+
 if (UNIX)
    # For hardware popcount and other special instructions
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
@@ -104,6 +105,19 @@ add_library(pisa ${PISA_SRC_FILES})
 target_include_directories(pisa PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/pisa>
 )
+
+# link_directories(/usr/local/include)
+
+include_directories(/home/RT_Enzyme/repo/pisa/external/memkind/include)
+# libmemkind
+ExternalProject_Add(memkind
+  SOURCE_DIR /home/RT_Enzyme/repo/pisa/external/memkind
+  BUILD_IN_SOURCE 1
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/external/memkind/build.sh"
+  INSTALL_COMMAND ""
+  )
+
 target_link_libraries(pisa
     PUBLIC
         Threads::Threads
@@ -123,6 +137,7 @@ target_link_libraries(pisa
         MaskedVByte
         simdcomp
         QMX
+        # memkind
     PRIVATE
         gumbo::gumbo
         warcpp
@@ -132,6 +147,10 @@ target_link_libraries(pisa
         KrovetzStemmer
 )
 target_include_directories(pisa PUBLIC external)
+
+
+target_link_libraries(pisa PUBLIC /home/RT_Enzyme/repo/pisa/external/memkind/.libs/libmemkind.so)
+
 
 if (PISA_BUILD_TOOLS)
     add_subdirectory(tools)

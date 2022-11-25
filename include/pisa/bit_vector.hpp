@@ -1,11 +1,11 @@
 #pragma once
 
 #include <vector>
-
 #include "util/broadword.hpp"
 #include "util/util.hpp"
 
 #include "mappable/mappable_vector.hpp"
+
 
 namespace pisa {
 
@@ -16,7 +16,7 @@ class bit_vector {
     bit_vector() = default;
 
     template <class Range>
-    explicit bit_vector(Range const& from)
+    explicit bit_vector(Range const& from, bool use_pm = false)
     {
         std::vector<uint64_t> bits;
         auto const first_mask = uint64_t(1);
@@ -38,6 +38,7 @@ class bit_vector {
         if (mask != first_mask) {
             bits.push_back(cur_val);
         }
+        // m_bits.set_pm(use_pm);
         m_bits.steal(bits);
     }
 
@@ -77,6 +78,7 @@ class bit_vector {
         uint64_t shift = pos % 64;
         uint64_t mask = std::numeric_limits<std::uint64_t>::max()
             >> (std::numeric_limits<std::uint64_t>::digits - len);
+        std::cout<<"block:"<<block<<" size:"<<m_bits.size()<<std::endl;
         if (shift + len <= 64) {
             return m_bits[block] >> shift & mask;
         }

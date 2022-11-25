@@ -95,3 +95,5 @@ target_compile_options(rapidcheck PRIVATE -Wno-error)
 set(TAILY_ENABLE_TESTING OFF CACHE BOOL "skip taily testing")
 set(TAILY_BUILD_EXAMPLE OFF CACHE BOOL "skip taily example")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/taily)
+# Add memkind
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/memkind EXCLUDE_FROM_ALL)

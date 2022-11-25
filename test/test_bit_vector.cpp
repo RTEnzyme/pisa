@@ -11,6 +11,8 @@
 #include "test_common.hpp"
 #include "test_rank_select_common.hpp"
 
+#define USE_PM (false)
+
 TEST_CASE("bit_vector")
 {
     rc::check([](std::vector<bool> v) {
@@ -18,6 +20,7 @@ TEST_CASE("bit_vector")
             pisa::bit_vector_builder bvb;
             for (auto elem: v) {
                 bvb.push_back(elem);
+                std::cout<<elem<<std::endl;
             }
 
             pisa::bit_vector bitmap(&bvb);
@@ -59,10 +62,13 @@ TEST_CASE("bit_vector")
                 uint64_t len = pisa::broadword::msb(i) + 1;
                 bvb.append_bits(i, len);
             }
+            
             pisa::bit_vector bitmap(&bvb);
+            std::cout<<"init success"<<std::endl;
             uint64_t pos = 0;
             for (uint64_t i: ints) {
                 uint64_t len = pisa::broadword::msb(i) + 1;
+                std::cout<<len<<std::endl;
                 REQUIRE(i == bitmap.get_bits(pos, len));
                 pos += len;
             }
@@ -139,7 +145,7 @@ TEST_CASE("bit_vector_unary_enumerator")
         }
     }();
 
-    pisa::bit_vector bitmap(v);
+    pisa::bit_vector bitmap(v, USE_PM);
 
     std::vector<size_t> ones;
     for (size_t i = 0; i < v.size(); ++i) {

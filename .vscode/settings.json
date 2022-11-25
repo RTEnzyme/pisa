@@ -81,6 +81,8 @@
         "variant": "cpp",
         "multi_span": "cpp",
         "string_span": "cpp",
-        "gsl_util": "cpp"
+        "gsl_util": "cpp",
+        "gsl_algorithm": "cpp",
+        "gsl_byte": "cpp"
     }
 }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <vector>
+#include "pmem_allocator.h"
 
 #include "boost/function.hpp"
 #include "boost/lambda/bind.hpp"
@@ -10,6 +11,8 @@
 #include "boost/utility.hpp"
 
 #include "util/intrinsics.hpp"
+
+#define PMEM_MAX_SIZE (1024 * 1024 * 64)
 
 namespace pisa { namespace mapper {
 
@@ -20,6 +23,10 @@ namespace pisa { namespace mapper {
     }  // namespace detail
 
     using deleter_t = boost::function<void()>;
+    // static char path[PATH_MAX] = "/tmp/";
+    // static libmemkind::kinds kind = libmemkind::kinds::DEFAULT;
+    const size_t pmem_max_size = 64 * 1024 * 1024;
+    const std::string pmem_dir("/tmp/");
 
     template <typename T>  // T must be a POD
     class mappable_vector {
@@ -27,6 +34,7 @@ namespace pisa { namespace mapper {
         using value_type = T;
         using iterator = const T*;
         using const_iterator = const T*;
+        using allocator = libmemkind::pmem::allocator<T>;
 
         mappable_vector() : m_data(0), m_size(0), m_deleter() {}
         mappable_vector(mappable_vector const&) = delete;
@@ -35,15 +43,28 @@ namespace pisa { namespace mapper {
         mappable_vector& operator=(mappable_vector&&) = delete;
 
         template <typename Range>
-        explicit mappable_vector(Range const& from) : m_data(0), m_size(0)
+        explicit mappable_vector(Range const& from, bool use_memkind=false) 
+        : m_data(0), m_size(0), is_pm(use_memkind)
         {
-            size_t size = boost::size(from);
-            T* data = new T[size];
-            m_deleter = boost::lambda::bind(boost::lambda::delete_array(), data);
+            
+            if (use_memkind) {
+                size_t size = boost::size(from);
+                allocator alc{pmem_dir, pmem_max_size};
+                T* data = alc.allocate(size);
+                m_deleter = boost::lambda::bind(boost::lambda::delete_array(), data);
 
-            std::copy(boost::begin(from), boost::end(from), data);
-            m_data = data;
-            m_size = size;
+                std::copy(boost::begin(from), boost::end(from), data);
+                m_data = data;
+                m_size = size;
+            } else {
+                size_t size = boost::size(from);
+                T* data = new T[size];
+                m_deleter = boost::lambda::bind(boost::lambda::delete_array(), data);
+
+                std::copy(boost::begin(from), boost::end(from), data);
+                m_data = data;
+                m_size = size;
+            }
         }
 
         ~mappable_vector()
@@ -68,11 +89,25 @@ namespace pisa { namespace mapper {
             clear();
             m_size = vec.size();
             if (m_size > 0) {
-                auto* new_vec = new std::vector<T>;
-                new_vec->swap(vec);
-                m_deleter = boost::lambda::bind(boost::lambda::delete_ptr(), new_vec);
-                m_data = &(*new_vec)[0];
+                if (is_pm) {
+                    allocator alc{pmem_dir, pmem_max_size};
+                    auto* new_vec =  new std::vector<T, allocator>(alc);
+                    for( auto v: vec) {
+                        new_vec->push_back(v);
+                    }
+                    m_deleter = boost::lambda::bind(boost::lambda::delete_ptr(), new_vec);
+                    m_data = &(*new_vec)[0];
+                } else {
+                    auto* new_vec = new std::vector<T>;
+                    new_vec->swap(vec);
+                    m_deleter = boost::lambda::bind(boost::lambda::delete_ptr(), new_vec);
+                    m_data = &(*new_vec)[0];
+                }
             }
+        }
+
+        void set_pm(bool v) {
+            is_pm = v;
         }
 
         template <typename Range>
@@ -106,6 +141,7 @@ namespace pisa { namespace mapper {
         const T* m_data;
         uint64_t m_size;
         deleter_t m_deleter;
+        bool is_pm;
     };
 
 }}  // namespace pisa::mapper
