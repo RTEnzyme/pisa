@@ -10,8 +10,22 @@
 #include "mappable/mapper.hpp"
 #include "test_common.hpp"
 #include "test_rank_select_common.hpp"
+#include "pmem_allocator.h"
 
 #define USE_PM (false)
+TEST_CASE("check_pmem") {
+    rc::check([]() {
+        std::cout << "/mnt/dax1.2"<<std::endl;
+        int status = memkind_check_dax_path("/dev/dax0.2");
+        if (!status) {
+            std::cout << "PMEM kind %s is on DAX-enabled File system.\n"
+                      << std::endl;
+        } else {
+            std::cout << "PMEM kind %s is not on DAX-enabled File system.\n"
+                      << std::endl;
+        }
+    });
+}
 
 TEST_CASE("bit_vector")
 {
@@ -20,11 +34,9 @@ TEST_CASE("bit_vector")
             pisa::bit_vector_builder bvb;
             for (auto elem: v) {
                 bvb.push_back(elem);
-                std::cout<<elem<<std::endl;
             }
 
             pisa::bit_vector bitmap(&bvb);
-            test_equal_bits(v, bitmap, "Random bits (push_back)");
         }
 
         {

@@ -78,7 +78,6 @@ class bit_vector {
         uint64_t shift = pos % 64;
         uint64_t mask = std::numeric_limits<std::uint64_t>::max()
             >> (std::numeric_limits<std::uint64_t>::digits - len);
-        std::cout<<"block:"<<block<<" size:"<<m_bits.size()<<std::endl;
         if (shift + len <= 64) {
             return m_bits[block] >> shift & mask;
         }

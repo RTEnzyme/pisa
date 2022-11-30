@@ -111,7 +111,7 @@ target_include_directories(pisa PUBLIC
 include_directories(/home/RT_Enzyme/repo/pisa/external/memkind/include)
 # libmemkind
 ExternalProject_Add(memkind
-  SOURCE_DIR /home/RT_Enzyme/repo/pisa/external/memkind
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/memkind
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND ""
   BUILD_COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/external/memkind/build.sh"
@@ -149,7 +149,7 @@ target_link_libraries(pisa
 target_include_directories(pisa PUBLIC external)
 
 
-target_link_libraries(pisa PUBLIC /home/RT_Enzyme/repo/pisa/external/memkind/.libs/libmemkind.so)
+target_link_libraries(pisa PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/memkind/.libs/libmemkind.so)
 
 
 if (PISA_BUILD_TOOLS)

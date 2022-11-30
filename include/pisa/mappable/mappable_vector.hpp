@@ -23,10 +23,9 @@ namespace pisa { namespace mapper {
     }  // namespace detail
 
     using deleter_t = boost::function<void()>;
-    // static char path[PATH_MAX] = "/tmp/";
     // static libmemkind::kinds kind = libmemkind::kinds::DEFAULT;
     const size_t pmem_max_size = 64 * 1024 * 1024;
-    const std::string pmem_dir("/tmp/");
+    const std::string pmem_dir("/mnt/pmem1");
 
     template <typename T>  // T must be a POD
     class mappable_vector {
@@ -95,6 +94,7 @@ namespace pisa { namespace mapper {
                     for( auto v: vec) {
                         new_vec->push_back(v);
                     }
+                    std::cout<<"pm_vector size: "<<new_vec->size()<<std::endl;
                     m_deleter = boost::lambda::bind(boost::lambda::delete_ptr(), new_vec);
                     m_data = &(*new_vec)[0];
                 } else {

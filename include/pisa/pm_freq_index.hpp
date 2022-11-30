@@ -52,14 +52,6 @@ public:
         mapper::map(*this, m_source.data(), mapper::map_flags::warmup);
    }
 
-   /**
-    * Constructs a PM view over the index stored in the file
-    * 
-   */
-  explicit pm_freq_index(const std::string& index_filename) {
-
-  }
-
 private:
     global_parameters m_params;
     uint64_t n_num_docs = 0;
