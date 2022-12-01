@@ -9,7 +9,12 @@ namespace pisa {
 
 class bitvector_collection {
   public:
-    bitvector_collection() : m_size(0) {}
+    bitvector_collection(bool use_pm=false) : m_size(0) {
+      if (use_pm) {
+        m_bitvectors.set_pm(use_pm);
+        m_endpoints.set_pm(use_pm);
+      }
+    }
 
     class builder {
       public:

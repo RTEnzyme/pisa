@@ -17,6 +17,7 @@ class bit_vector {
 
     template <class Range>
     explicit bit_vector(Range const& from, bool use_pm = false)
+    : m_pm_extension(use_pm)
     {
         std::vector<uint64_t> bits;
         auto const first_mask = uint64_t(1);
@@ -38,7 +39,7 @@ class bit_vector {
         if (mask != first_mask) {
             bits.push_back(cur_val);
         }
-        // m_bits.set_pm(use_pm);
+        m_bits.set_pm(m_pm_extension);
         m_bits.steal(bits);
     }
 
@@ -171,6 +172,9 @@ class bit_vector {
 
     mapper::mappable_vector<uint64_t> const& data() const { return m_bits; }
 
+    void set_pm(bool use_pm) {
+        m_pm_extension = use_pm;
+    }
     struct enumerator {
         enumerator() = default;
 
@@ -323,6 +327,7 @@ class bit_vector {
             m_position = (m_position & ~uint64_t(63)) + pos_in_word;
         }
 
+
       private:
         uint64_t const* m_data;
         uint64_t m_position;
@@ -332,6 +337,7 @@ class bit_vector {
   protected:
     size_t m_size{0};
     mapper::mappable_vector<uint64_t> m_bits;
+    bool m_pm_extension;
 };
 
 }  // namespace pisa

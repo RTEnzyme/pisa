@@ -17,6 +17,7 @@
 #include "block_freq_index.hpp"
 
 #include "freq_index.hpp"
+#include "pm_freq_index.hpp"
 #include "sequence/partitioned_sequence.hpp"
 #include "sequence/positive_sequence.hpp"
 #include "sequence/uniform_partitioned_sequence.hpp"
@@ -26,6 +27,7 @@ using ef_index = freq_index<compact_elias_fano, positive_sequence<strict_elias_f
 
 using single_index = freq_index<indexed_sequence, positive_sequence<>>;
 
+using pm_single_index = pm_freq_index<indexed_sequence, positive_sequence<>>;
 using pefuniform_index =
     freq_index<uniform_partitioned_sequence<>, positive_sequence<uniform_partitioned_sequence<strict_sequence>>>;
 
@@ -48,7 +50,7 @@ using block_simdbp_index = block_freq_index<pisa::simdbp_block>;
 #define PISA_INDEX_TYPES                                                                    \
     (ef)(single)(pefuniform)(pefopt)(block_optpfor)(block_varintg8iu)(block_streamvbyte)(   \
         block_maskedvbyte)(block_interpolative)(block_qmx)(block_varintgb)(block_simple8b)( \
-        block_simple16)(block_simdbp)
+        block_simple16)(block_simdbp)(pm_single)
 #define PISA_BLOCK_INDEX_TYPES                                                                    \
     (block_optpfor)(block_varintg8iu)(block_streamvbyte)(block_maskedvbyte)(block_interpolative)( \
         block_qmx)(block_varintgb)(block_simple8b)(block_simple16)(block_simdbp)
