@@ -7,6 +7,7 @@
 #include <tbb/parallel_invoke.h>
 #include "memkind.h"
 
+#include "util/pm_utils.hpp"
 #include "memkind_allocated.hpp"
 #include "bitvector_collection.hpp"
 #include "codec/compact_elias_fano.hpp"
@@ -37,7 +38,7 @@ public:
     using index_layout_tag = PMIndexTag;
 
     pm_freq_index() 
-    : m_docs_sequences(true), m_freqs_sequences(true) {
+    : m_docs_sequences(PM_AS_EXTENSION), m_freqs_sequences(PM_AS_EXTENSION) {
     }
 
     /**
@@ -46,7 +47,7 @@ public:
      * 
     */
    explicit pm_freq_index(MemorySource source) 
-   : m_docs_sequences(true), m_freqs_sequences(true),m_source(std::move(source)) 
+   : m_docs_sequences(PM_AS_EXTENSION), m_freqs_sequences(PM_AS_EXTENSION),m_source(std::move(source)) 
    {
         mapper::map(*this, m_source.data(), mapper::map_flags::warmup);
    }

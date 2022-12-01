@@ -5,6 +5,7 @@
 #include "util/util.hpp"
 
 #include "mappable/mappable_vector.hpp"
+#include "util/pm_utils.hpp"
 
 
 namespace pisa {
@@ -16,8 +17,8 @@ class bit_vector {
     bit_vector() = default;
 
     template <class Range>
-    explicit bit_vector(Range const& from, bool use_pm = false)
-    : m_pm_extension(use_pm)
+    explicit bit_vector(Range const& from, PM_TYPE pm_type=NO_PM)
+    : m_pm_type(pm_type)
     {
         std::vector<uint64_t> bits;
         auto const first_mask = uint64_t(1);
@@ -39,7 +40,7 @@ class bit_vector {
         if (mask != first_mask) {
             bits.push_back(cur_val);
         }
-        m_bits.set_pm(m_pm_extension);
+        m_bits.set_pm(m_pm_type);
         m_bits.steal(bits);
     }
 
@@ -172,8 +173,8 @@ class bit_vector {
 
     mapper::mappable_vector<uint64_t> const& data() const { return m_bits; }
 
-    void set_pm(bool use_pm) {
-        m_pm_extension = use_pm;
+    void set_pm(PM_TYPE pm_type) {
+        m_pm_type = pm_type;
     }
     struct enumerator {
         enumerator() = default;
@@ -337,7 +338,7 @@ class bit_vector {
   protected:
     size_t m_size{0};
     mapper::mappable_vector<uint64_t> m_bits;
-    bool m_pm_extension;
+    PM_TYPE m_pm_type;
 };
 
 }  // namespace pisa

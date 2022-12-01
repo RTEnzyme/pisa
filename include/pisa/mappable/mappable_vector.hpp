@@ -11,6 +11,7 @@
 #include "boost/utility.hpp"
 
 #include "util/intrinsics.hpp"
+#include "util/pm_utils.hpp"
 
 #define PMEM_MAX_SIZE (1024 * 1024 * 64)
 
@@ -42,11 +43,11 @@ namespace pisa { namespace mapper {
         mappable_vector& operator=(mappable_vector&&) = delete;
 
         template <typename Range>
-        explicit mappable_vector(Range const& from, bool use_memkind=false) 
-        : m_data(0), m_size(0), is_pm(use_memkind)
+        explicit mappable_vector(Range const& from, PM_TYPE pm_type=NO_PM) 
+        : m_data(0), m_size(0), m_pm_type(pm_type)
         {
             
-            if (use_memkind) {
+            if (m_pm_type == PM_AS_EXTENSION) {
                 size_t size = boost::size(from);
                 allocator alc{pmem_dir, pmem_max_size};
                 T* data = alc.allocate(size);
@@ -88,7 +89,7 @@ namespace pisa { namespace mapper {
             clear();
             m_size = vec.size();
             if (m_size > 0) {
-                if (is_pm) {
+                if (m_pm_type == PM_AS_EXTENSION) {
                     allocator alc{pmem_dir, pmem_max_size};
                     auto* new_vec =  new std::vector<T, allocator>(alc);
                     for( auto v: vec) {
@@ -106,8 +107,8 @@ namespace pisa { namespace mapper {
             }
         }
 
-        void set_pm(bool v) {
-            is_pm = v;
+        void set_pm(PM_TYPE pm_type) {
+            m_pm_type = pm_type;
         }
 
         template <typename Range>
@@ -141,7 +142,7 @@ namespace pisa { namespace mapper {
         const T* m_data;
         uint64_t m_size;
         deleter_t m_deleter;
-        bool is_pm;
+        PM_TYPE m_pm_type;
     };
 
 }}  // namespace pisa::mapper

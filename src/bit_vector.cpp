@@ -6,7 +6,6 @@ namespace pisa {
 bit_vector::bit_vector(bit_vector_builder* from)
 {
     m_size = from->size();
-    m_bits.set_pm(true);
     m_bits.steal(from->move_bits());
 }
 

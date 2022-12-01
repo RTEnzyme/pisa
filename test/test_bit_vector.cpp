@@ -7,6 +7,7 @@
 
 #include "bit_vector.hpp"
 #include "bit_vector_builder.hpp"
+
 #include "mappable/mapper.hpp"
 #include "test_common.hpp"
 #include "test_rank_select_common.hpp"
@@ -157,7 +158,7 @@ TEST_CASE("bit_vector_unary_enumerator")
         }
     }();
 
-    pisa::bit_vector bitmap(v, USE_PM);
+    pisa::bit_vector bitmap(v, PM_AS_EXTENSION);
 
     std::vector<size_t> ones;
     for (size_t i = 0; i < v.size(); ++i) {

@@ -2,6 +2,7 @@
 
 #include "bit_vector.hpp"
 #include "bit_vector_builder.hpp"
+#include "util/pm_utils.hpp"
 
 #include "codec/compact_elias_fano.hpp"
 
@@ -9,10 +10,10 @@ namespace pisa {
 
 class bitvector_collection {
   public:
-    bitvector_collection(bool use_pm=false) : m_size(0) {
-      if (use_pm) {
-        m_bitvectors.set_pm(use_pm);
-        m_endpoints.set_pm(use_pm);
+    bitvector_collection(PM_TYPE pm_type=NO_PM) : m_size(0) {
+      if (pm_type == PM_AS_EXTENSION) {
+        m_bitvectors.set_pm(pm_type);
+        m_endpoints.set_pm(pm_type);
       }
     }
 
