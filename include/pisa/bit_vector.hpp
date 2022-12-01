@@ -16,6 +16,10 @@ class bit_vector {
   public:
     bit_vector() = default;
 
+    bit_vector(PM_TYPE pm_type) : m_bits(pm_type), m_pm_type(pm_type) {
+
+    }
+
     template <class Range>
     explicit bit_vector(Range const& from, PM_TYPE pm_type=NO_PM)
     : m_pm_type(pm_type)

@@ -42,6 +42,12 @@ namespace pisa { namespace mapper {
         mappable_vector& operator=(mappable_vector const&) = delete;
         mappable_vector& operator=(mappable_vector&&) = delete;
 
+        mappable_vector(PM_TYPE pm_type) {
+            allocator alc{pmem_dir, pmem_max_size};
+            m_data = &(*new std::vector<T, allocator>(alc))[0];
+            m_deleter = boost::lambda::bind(boost::lambda::delete_array(), m_data);
+        }
+
         template <typename Range>
         explicit mappable_vector(Range const& from, PM_TYPE pm_type=NO_PM) 
         : m_data(0), m_size(0), m_pm_type(pm_type)

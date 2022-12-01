@@ -10,11 +10,7 @@ namespace pisa {
 
 class bitvector_collection {
   public:
-    bitvector_collection(PM_TYPE pm_type=NO_PM) : m_size(0) {
-      if (pm_type == PM_AS_EXTENSION) {
-        m_bitvectors.set_pm(pm_type);
-        m_endpoints.set_pm(pm_type);
-      }
+    bitvector_collection(PM_TYPE pm_type=NO_PM) : m_size(0),  m_endpoints(pm_type), m_bitvectors(pm_type) {
     }
 
     class builder {
