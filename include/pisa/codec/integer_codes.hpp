@@ -33,6 +33,7 @@ inline uint64_t read_gamma_nonzero(bit_vector::enumerator& it)
     return read_gamma(it) + 1;
 }
 
+
 inline void write_delta(bit_vector_builder& bvb, uint64_t n)
 {
     uint64_t nn = n + 1;

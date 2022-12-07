@@ -13,7 +13,6 @@
 #include "util/intrinsics.hpp"
 #include "util/pm_utils.hpp"
 
-#define PMEM_MAX_SIZE (1024 * 1024 * 64)
 
 namespace pisa { namespace mapper {
 
@@ -25,8 +24,7 @@ namespace pisa { namespace mapper {
 
     using deleter_t = boost::function<void()>;
     // static libmemkind::kinds kind = libmemkind::kinds::DEFAULT;
-    const size_t pmem_max_size = 64 * 1024 * 1024;
-    const std::string pmem_dir("/mnt/pmem1");
+    const size_t pmem_max_size = 16 * 1024 * 1024;
 
     template <typename T>  // T must be a POD
     class mappable_vector {
@@ -43,7 +41,7 @@ namespace pisa { namespace mapper {
         mappable_vector& operator=(mappable_vector&&) = delete;
 
         mappable_vector(PM_TYPE pm_type) {
-            allocator alc{pmem_dir, pmem_max_size};
+            allocator alc{PMEM_DIR, PMEM_MAX_SIZE};
             m_data = &(*new std::vector<T, allocator>(alc))[0];
             m_deleter = boost::lambda::bind(boost::lambda::delete_array(), m_data);
         }
@@ -55,8 +53,8 @@ namespace pisa { namespace mapper {
             
             if (m_pm_type == PM_AS_EXTENSION) {
                 size_t size = boost::size(from);
-                allocator alc{pmem_dir, pmem_max_size};
-                T* data = alc.allocate(size);
+                allocator alc{PMEM_DIR, PMEM_MAX_SIZE};
+                value_type* data = alc.allocate(size);
                 m_deleter = boost::lambda::bind(boost::lambda::delete_array(), data);
 
                 std::copy(boost::begin(from), boost::end(from), data);
@@ -64,7 +62,7 @@ namespace pisa { namespace mapper {
                 m_size = size;
             } else {
                 size_t size = boost::size(from);
-                T* data = new T[size];
+                value_type* data = new value_type[size];
                 m_deleter = boost::lambda::bind(boost::lambda::delete_array(), data);
 
                 std::copy(boost::begin(from), boost::end(from), data);
@@ -80,7 +78,7 @@ namespace pisa { namespace mapper {
             }
         }
 
-        void swap(mappable_vector& other)
+        virtual void swap(mappable_vector& other)
         {
             using std::swap;
             swap(m_data, other.m_data);
@@ -88,24 +86,24 @@ namespace pisa { namespace mapper {
             swap(m_deleter, other.m_deleter);
         }
 
-        void clear() { mappable_vector().swap(*this); }
+        virtual void clear() { mappable_vector().swap(*this); }
 
-        void steal(std::vector<T>& vec)
+        virtual void steal(std::vector<T>& vec)
         {
             clear();
             m_size = vec.size();
             if (m_size > 0) {
                 if (m_pm_type == PM_AS_EXTENSION) {
-                    allocator alc{pmem_dir, pmem_max_size};
-                    auto* new_vec =  new std::vector<T, allocator>(alc);
+                    allocator alc{PMEM_DIR, PMEM_MAX_SIZE};
+                    auto* new_vec =  new std::vector<value_type, allocator>(alc);
                     for( auto v: vec) {
                         new_vec->push_back(v);
                     }
-                    std::cout<<"pm_vector size: "<<new_vec->size()<<std::endl;
+                    vec.clear();
                     m_deleter = boost::lambda::bind(boost::lambda::delete_ptr(), new_vec);
                     m_data = &(*new_vec)[0];
                 } else {
-                    auto* new_vec = new std::vector<T>;
+                    auto* new_vec = new std::vector<value_type>;
                     new_vec->swap(vec);
                     m_deleter = boost::lambda::bind(boost::lambda::delete_ptr(), new_vec);
                     m_data = &(*new_vec)[0];
@@ -113,7 +111,7 @@ namespace pisa { namespace mapper {
             }
         }
 
-        void set_pm(PM_TYPE pm_type) {
+        virtual void set_pm(PM_TYPE pm_type) {
             m_pm_type = pm_type;
         }
 
@@ -124,21 +122,21 @@ namespace pisa { namespace mapper {
             mappable_vector(from).swap(*this);
         }
 
-        uint64_t size() const { return m_size; }
+        virtual uint64_t size() const { return m_size; }
 
         inline const_iterator begin() const { return m_data; }
 
         inline const_iterator end() const { return m_data + m_size; }
 
-        inline T const& operator[](uint64_t i) const
+        virtual inline T const& operator[](uint64_t i) const
         {
             assert(i < m_size);
             return m_data[i];
         }
 
-        inline T const* data() const { return m_data; }
+        virtual inline T const* data() const { return m_data; }
 
-        inline void prefetch(size_t i) const { intrinsics::prefetch(m_data + i); }
+        virtual inline void prefetch(size_t i) const { intrinsics::prefetch(m_data + i); }
 
         friend class detail::freeze_visitor;
         friend class detail::map_visitor;

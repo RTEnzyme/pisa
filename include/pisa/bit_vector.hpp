@@ -5,6 +5,7 @@
 #include "util/util.hpp"
 
 #include "mappable/mappable_vector.hpp"
+#include "mappable/mappable_pm_vector.hpp"
 #include "util/pm_utils.hpp"
 
 
@@ -16,14 +17,24 @@ class bit_vector {
   public:
     bit_vector() = default;
 
-    bit_vector(PM_TYPE pm_type) : m_bits(pm_type), m_pm_type(pm_type) {
-
+    bit_vector(PM_TYPE pm_type) {
+        std::cout<<"basic function"<<std::endl;
+        m_pm_type = pm_type;
+        if (pm_type == NO_PM) {
+            m_bits = new pisa::mapper::mappable_vector<uint64_t>();
+        } else if (pm_type == PM_AS_DRAM) {
+            std::cout<<"PM_AS_DRAM"<<std::endl;
+            m_bits = new pisa::mapper::mappable_pm_vector<uint64_t>(std::string("bit_vector_test"));
+        } else if (pm_type == PM_AS_EXTENSION) {
+            m_bits = new pisa::mapper::mappable_vector<uint64_t>(pm_type);
+        }
     }
 
     template <class Range>
     explicit bit_vector(Range const& from, PM_TYPE pm_type=NO_PM)
     : m_pm_type(pm_type)
     {
+        std::cout<<"enter the false function"<<std::endl;
         std::vector<uint64_t> bits;
         auto const first_mask = uint64_t(1);
         uint64_t mask = first_mask;
@@ -44,11 +55,17 @@ class bit_vector {
         if (mask != first_mask) {
             bits.push_back(cur_val);
         }
-        m_bits.set_pm(m_pm_type);
-        m_bits.steal(bits);
+        (*m_bits).steal(bits);
     }
 
-    explicit bit_vector(bit_vector_builder* from);
+    explicit bit_vector(bit_vector_builder* from, PM_TYPE pm_type=NO_PM);
+
+    ~bit_vector() {
+        if (m_bits != nullptr) {
+            delete[] m_bits;
+            m_bits = nullptr;
+        }
+    }
 
     template <typename Visitor>
     void map(Visitor& visit)
@@ -59,7 +76,7 @@ class bit_vector {
     void swap(bit_vector& other)
     {
         std::swap(other.m_size, m_size);
-        other.m_bits.swap(m_bits);
+        (*other.m_bits).swap(*m_bits);
     }
 
     inline size_t size() const { return m_size; }
@@ -68,9 +85,9 @@ class bit_vector {
     {
         assert(pos < m_size);
         uint64_t block = pos / 64;
-        assert(block < m_bits.size());
+        assert(block < m_bits->size());
         uint64_t shift = pos % 64;
-        return ((m_bits[block] >> shift) & 1) != 0U;
+        return (((*m_bits)[block] >> shift) & 1) != 0U;
     }
 
     inline uint64_t get_bits(uint64_t pos, uint64_t len) const
@@ -85,9 +102,9 @@ class bit_vector {
         uint64_t mask = std::numeric_limits<std::uint64_t>::max()
             >> (std::numeric_limits<std::uint64_t>::digits - len);
         if (shift + len <= 64) {
-            return m_bits[block] >> shift & mask;
+            return (*m_bits)[block] >> shift & mask;
         }
-        return (m_bits[block] >> shift) | (m_bits[block + 1] << (64 - shift) & mask);
+        return ((*m_bits)[block] >> shift) | ((*m_bits)[block + 1] << (64 - shift) & mask);
     }
 
     // same as get_bits(pos, 64) but it can extend further size(), padding with zeros
@@ -96,9 +113,9 @@ class bit_vector {
         assert(pos < size());
         uint64_t block = pos / 64;
         uint64_t shift = pos % 64;
-        uint64_t word = m_bits[block] >> shift;
-        if ((shift != 0U) && block + 1 < m_bits.size()) {
-            word |= m_bits[block + 1] << (64 - shift);
+        uint64_t word = (*m_bits)[block] >> shift;
+        if ((shift != 0U) && block + 1 < m_bits->size()) {
+            word |= (*m_bits)[block + 1] << (64 - shift);
         }
         return word;
     }
@@ -107,7 +124,7 @@ class bit_vector {
     inline uint64_t get_word56(uint64_t pos) const
     {
         // XXX check endianness?
-        const char* ptr = reinterpret_cast<const char*>(m_bits.data());
+        const char* ptr = reinterpret_cast<const char*>(m_bits->data());
         return *(reinterpret_cast<uint64_t const*>(ptr + pos / 8)) >> (pos % 8);
     }
 
@@ -116,13 +133,13 @@ class bit_vector {
         assert(pos < m_size);
         uint64_t block = pos / 64;
         uint64_t shift = 64 - pos % 64 - 1;
-        uint64_t word = ~m_bits[block];
+        uint64_t word = ~(*m_bits)[block];
         word = (word << shift) >> shift;
 
         unsigned long ret;
         while (broadword::msb(word, ret) == 0U) {
             assert(block);
-            word = ~m_bits[--block];
+            word = ~(*m_bits)[--block];
         };
         return block * 64 + ret;
     }
@@ -132,13 +149,13 @@ class bit_vector {
         assert(pos < m_size);
         uint64_t block = pos / 64;
         uint64_t shift = pos % 64;
-        uint64_t word = (~m_bits[block] >> shift) << shift;
+        uint64_t word = (~(*m_bits)[block] >> shift) << shift;
 
         unsigned long ret;
         while (broadword::lsb(word, ret) == 0U) {
             ++block;
-            assert(block < m_bits.size());
-            word = ~m_bits[block];
+            assert(block < m_bits->size());
+            word = ~(*m_bits)[block];
         };
         return block * 64 + ret;
     }
@@ -148,13 +165,13 @@ class bit_vector {
         assert(pos < m_size);
         uint64_t block = pos / 64;
         uint64_t shift = 64 - pos % 64 - 1;
-        uint64_t word = m_bits[block];
+        uint64_t word = (*m_bits)[block];
         word = (word << shift) >> shift;
 
         unsigned long ret;
         while (broadword::msb(word, ret) == 0U) {
             assert(block);
-            word = m_bits[--block];
+            word = (*m_bits)[--block];
         };
         return block * 64 + ret;
     }
@@ -164,18 +181,18 @@ class bit_vector {
         assert(pos < m_size);
         uint64_t block = pos / 64;
         uint64_t shift = pos % 64;
-        uint64_t word = (m_bits[block] >> shift) << shift;
+        uint64_t word = ((*m_bits)[block] >> shift) << shift;
 
         unsigned long ret;
         while (broadword::lsb(word, ret) == 0U) {
             ++block;
-            assert(block < m_bits.size());
-            word = m_bits[block];
+            assert(block < m_bits->size());
+            word = (*m_bits)[block];
         };
         return block * 64 + ret;
     }
 
-    mapper::mappable_vector<uint64_t> const& data() const { return m_bits; }
+    mapper::mappable_vector<uint64_t> const& data() const { return *m_bits; }
 
     void set_pm(PM_TYPE pm_type) {
         m_pm_type = pm_type;
@@ -341,7 +358,7 @@ class bit_vector {
 
   protected:
     size_t m_size{0};
-    mapper::mappable_vector<uint64_t> m_bits;
+    mapper::mappable_vector<uint64_t> *m_bits;
     PM_TYPE m_pm_type;
 };
 

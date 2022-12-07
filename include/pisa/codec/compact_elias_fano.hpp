@@ -170,7 +170,7 @@ struct compact_elias_fano {
                 if (PISA_UNLIKELY(m_position == size())) {
                     m_value = m_of.universe;
                 } else {
-                    bit_vector::unary_enumerator he = m_high_enumerator;
+                    auto he = m_high_enumerator;
                     for (size_t i = 0; i < skip; ++i) {
                         he.next();
                     }
@@ -369,7 +369,7 @@ struct compact_elias_fano {
             }
 
             enumerator& e;
-            bit_vector::unary_enumerator high_enumerator;
+            typename bit_vector::unary_enumerator high_enumerator;
             uint64_t high_base, lower_bits, lower_base, mask;
             bit_vector const& bv;
         };

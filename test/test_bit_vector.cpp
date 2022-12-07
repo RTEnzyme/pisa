@@ -16,8 +16,8 @@
 #define USE_PM (false)
 TEST_CASE("check_pmem") {
     rc::check([]() {
-        std::cout << "/mnt/dax1.2"<<std::endl;
-        int status = memkind_check_dax_path("/dev/dax0.2");
+        std::cout << "/mnt/"<<std::endl;
+        int status = memkind_check_dax_path("/mnt/pmemdir");
         if (!status) {
             std::cout << "PMEM kind %s is on DAX-enabled File system.\n"
                       << std::endl;
@@ -54,68 +54,68 @@ TEST_CASE("bit_vector")
             test_equal_bits(v, bitmap, "Random bits (set)");
         }
 
-        auto ints = std::array<uint64_t, 15>{uint64_t(-1),
-                                             uint64_t(1) << 63u,
-                                             1,
-                                             1,
-                                             1,
-                                             3,
-                                             5,
-                                             7,
-                                             0xFFF,
-                                             0xF0F,
-                                             1,
-                                             0xFFFFFF,
-                                             0x123456,
-                                             uint64_t(1) << 63u,
-                                             uint64_t(-1)};
-        {
-            pisa::bit_vector_builder bvb;
-            for (uint64_t i: ints) {
-                uint64_t len = pisa::broadword::msb(i) + 1;
-                bvb.append_bits(i, len);
-            }
+        // auto ints = std::array<uint64_t, 15>{uint64_t(-1),
+        //                                      uint64_t(1) << 63u,
+        //                                      1,
+        //                                      1,
+        //                                      1,
+        //                                      3,
+        //                                      5,
+        //                                      7,
+        //                                      0xFFF,
+        //                                      0xF0F,
+        //                                      1,
+        //                                      0xFFFFFF,
+        //                                      0x123456,
+        //                                      uint64_t(1) << 63u,
+        //                                      uint64_t(-1)};
+        // {
+        //     pisa::bit_vector_builder bvb;
+        //     for (uint64_t i: ints) {
+        //         uint64_t len = pisa::broadword::msb(i) + 1;
+        //         bvb.append_bits(i, len);
+        //     }
             
-            pisa::bit_vector bitmap(&bvb);
-            std::cout<<"init success"<<std::endl;
-            uint64_t pos = 0;
-            for (uint64_t i: ints) {
-                uint64_t len = pisa::broadword::msb(i) + 1;
-                std::cout<<len<<std::endl;
-                REQUIRE(i == bitmap.get_bits(pos, len));
-                pos += len;
-            }
-        }
+        //     pisa::bit_vector bitmap(&bvb);
+        //     std::cout<<"init success"<<std::endl;
+        //     uint64_t pos = 0;
+        //     for (uint64_t i: ints) {
+        //         uint64_t len = pisa::broadword::msb(i) + 1;
+        //         std::cout<<len<<std::endl;
+        //         REQUIRE(i == bitmap.get_bits(pos, len));
+        //         pos += len;
+        //     }
+        // }
 
-        {
-            using pisa::broadword::msb;
-            std::vector<size_t> positions(1);
-            for (uint64_t i: ints) {
-                positions.push_back(positions.back() + msb(i) + 1);
-            }
+        // {
+        //     using pisa::broadword::msb;
+        //     std::vector<size_t> positions(1);
+        //     for (uint64_t i: ints) {
+        //         positions.push_back(positions.back() + msb(i) + 1);
+        //     }
 
-            pisa::bit_vector_builder bvb(positions.back());
+        //     pisa::bit_vector_builder bvb(positions.back());
 
-            for (size_t i = 0; i < positions.size() - 1; ++i) {
-                uint64_t v = ints[i];
-                uint64_t len = positions[i + 1] - positions[i];
-                bvb.set_bits(positions[i], v, len);
-            }
+        //     for (size_t i = 0; i < positions.size() - 1; ++i) {
+        //         uint64_t v = ints[i];
+        //         uint64_t len = positions[i + 1] - positions[i];
+        //         bvb.set_bits(positions[i], v, len);
+        //     }
 
-            pisa::bit_vector bitmap(&bvb);
-            for (size_t i = 0; i < positions.size() - 1; ++i) {
-                uint64_t v = ints[i];
-                uint64_t len = positions[i + 1] - positions[i];
-                REQUIRE(v == bitmap.get_bits(positions[i], len));
-            }
-        }
+        //     pisa::bit_vector bitmap(&bvb);
+        //     for (size_t i = 0; i < positions.size() - 1; ++i) {
+        //         uint64_t v = ints[i];
+        //         uint64_t len = positions[i + 1] - positions[i];
+        //         REQUIRE(v == bitmap.get_bits(positions[i], len));
+        //     }
+        // }
     });
 }
 
 TEST_CASE("bit_vector_enumerator")
 {
     rc::check([](std::vector<bool> v) {
-        pisa::bit_vector bitmap(v);
+        pisa::bit_vector bitmap(v, PM_AS_EXTENSION);
 
         size_t i = 0;
         size_t pos = 0;

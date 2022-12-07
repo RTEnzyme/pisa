@@ -73,5 +73,7 @@ class bitvector_collection {
     size_t m_size;
     bit_vector m_endpoints;
     bit_vector m_bitvectors;
+
+    
 };
 }  // namespace pisa

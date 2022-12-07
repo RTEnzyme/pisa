@@ -150,7 +150,9 @@ target_include_directories(pisa PUBLIC external)
 
 
 target_link_libraries(pisa PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/memkind/.libs/libmemkind.so)
-
+find_package(LIBPMEMOBJ++ REQUIRED)
+link_directories(${LIBPMEMOBJ++_LIBRARY_DIRS})
+target_link_libraries(pisa PUBLIC ${LIBPMEMOBJ++_LIBRARIES})
 
 if (PISA_BUILD_TOOLS)
     add_subdirectory(tools)
